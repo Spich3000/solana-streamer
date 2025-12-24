@@ -1,0 +1,38 @@
+image:
+  repository: solana-streamer
+  tag: local
+  pullPolicy: IfNotPresent
+
+service:
+  port: 8080
+
+env:
+  RPC_HTTP_URL: "http://host.minikube.internal:8899"
+  RPC_WS_URL: "ws://host.minikube.internal:8900"
+  NETWORK_NAME: "localnet"
+  LOG_LEVEL: "info"
+  COMMITMENT: "confirmed"
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 256Mi
+
+metrics:
+  serviceMonitor:
+    enabled: false
+
+probes:
+  liveness:
+    path: /healthz
+    initialDelaySeconds: 15
+    periodSeconds: 10
+  readiness:
+    path: /readyz
+    initialDelaySeconds: 10
+    periodSeconds: 5
+    timeoutSeconds: 2
+    failureThreshold: 3

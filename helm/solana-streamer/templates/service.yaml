@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "solana-streamer.fullname" . }}
+spec:
+  type: ClusterIP
+  selector:
+    app: solana-streamer
+  ports:
+    - name: http
+      port: {{ .Values.service.port }}
+      targetPort: http
