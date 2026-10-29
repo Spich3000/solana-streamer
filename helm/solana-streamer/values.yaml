@@ -1,38 +1,80 @@
 image:
   repository: solana-streamer
-  tag: local
+  tag: ""
   pullPolicy: IfNotPresent
 
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+rpc:
+  # WebSocket endpoint that supports blockSubscribe. API keys usually live in
+  # the URL, so it is always delivered through a Secret.
+  url: ""
+  # Use a pre-existing Secret instead of rendering one from rpc.url.
+  existingSecret: ""
+  existingSecretKey: RPC_WS_URL
+
+config:
+  NETWORK_NAME: mainnet-beta
+  COMMITMENT: confirmed
+  LOG_LEVEL: info
+  STALL_TIMEOUT_MS: "120000"
+
+extraEnv: []
+
 service:
+  type: ClusterIP
   port: 8080
 
-env:
-  RPC_HTTP_URL: "http://host.minikube.internal:8899"
-  RPC_WS_URL: "ws://host.minikube.internal:8900"
-  NETWORK_NAME: "localnet"
-  LOG_LEVEL: "info"
-  COMMITMENT: "confirmed"
+serviceMonitor:
+  enabled: false
+  interval: 30s
+  labels: {}
+
+podAnnotations: {}
+podLabels: {}
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  runAsGroup: 1000
+  fsGroup: 1000
+  seccompProfile:
+    type: RuntimeDefault
+
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop: [ALL]
 
 resources:
   requests:
     cpu: 100m
     memory: 128Mi
   limits:
-    cpu: 500m
     memory: 256Mi
 
-metrics:
-  serviceMonitor:
-    enabled: false
-
-probes:
-  liveness:
+livenessProbe:
+  httpGet:
     path: /healthz
-    initialDelaySeconds: 15
-    periodSeconds: 10
-  readiness:
+    port: http
+  initialDelaySeconds: 10
+  periodSeconds: 10
+  timeoutSeconds: 2
+  failureThreshold: 3
+
+readinessProbe:
+  httpGet:
     path: /readyz
-    initialDelaySeconds: 10
-    periodSeconds: 5
-    timeoutSeconds: 2
-    failureThreshold: 3
+    port: http
+  periodSeconds: 5
+  timeoutSeconds: 2
+  failureThreshold: 3
+
+terminationGracePeriodSeconds: 15
+
+nodeSelector: {}
+tolerations: []
+affinity: {}

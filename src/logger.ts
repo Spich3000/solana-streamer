@@ -1,10 +1,18 @@
-import pino from "pino";
-import { config } from "./config";
+import { pino, type Logger } from "pino";
+import type { LogLevel } from "./config.js";
 
-export const logger = pino({
-    level: config.logLevel,
-});
-
-export function logRaw(obj: any) { // this is to have logs as task required, without addons from pino
-    console.log(JSON.stringify(obj));
+/**
+ * Diagnostics go to stderr so that stdout carries nothing but block NDJSON
+ * and can be piped straight into a consumer.
+ */
+export function createLogger(level: LogLevel, bindings: Record<string, string> = {}): Logger {
+  return pino(
+    {
+      level,
+      base: { service: "solana-streamer", ...bindings },
+      timestamp: pino.stdTimeFunctions.isoTime,
+      formatters: { level: (label) => ({ level: label }) },
+    },
+    pino.destination({ fd: 2, sync: false }),
+  );
 }
